@@ -1,0 +1,5 @@
+data:
+  upscale: 4
+  patch_size: 32
+  data_augmentation: False
+  normalize: False
