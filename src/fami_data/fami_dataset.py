@@ -3,7 +3,6 @@ from torch import cat
 import random
 from os import listdir, path
 from PIL import Image, ImageOps
-import numpy as np
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP', 'tif', 'TIF'])
