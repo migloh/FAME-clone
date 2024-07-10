@@ -1,6 +1,6 @@
 from os.path import join
 from torchvision.transforms import Compose, ToTensor
-from fami_dataset import FamiTrainDataset, FamiTestDataset
+from fami_data import FamiTrainDataset, FamiTestDataset
 
 def transform():
     return Compose([

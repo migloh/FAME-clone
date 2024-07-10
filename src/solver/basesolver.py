@@ -1,5 +1,5 @@
 import os, torch, time
-from fami_dataset.fami_data import get_data, get_test_data
+from fami_data.fami_data import get_data, get_test_data
 from torch.utils.data import DataLoader
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
