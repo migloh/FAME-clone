@@ -69,9 +69,9 @@ def augment(ms_image, lms_image, pan_image, bms_image, flip_h=True, rot=True):
             
     return ms_image, lms_image, pan_image, bms_image, info_aug
 
-class FamiDataLoader(Dataset):
+class FamiTrainDataset(Dataset):
     def __init__(self, data_dir_ms, data_dir_pan, cfg, transform=None, data_dir_mask=None):
-        super(FamiDataLoader, self).__init__()
+        super(FamiTrainDataset, self).__init__()
         self.ms_image_filenames = [path.join(data_dir_ms, x) for x in listdir(data_dir_ms) if is_image_file(x)]
         self.pan_image_filenames = [path.join(data_dir_pan, x) for x in listdir(data_dir_pan) if is_image_file(x)]
         self.mask_image_filenames = None
@@ -135,3 +135,45 @@ class FamiDataLoader(Dataset):
 
     def __len__(self):
         return len(self.ms_image_filenames) 
+
+class FamiTestDataset(Dataset):
+    def __init__(self, data_dir_ms, data_dir_pan, cfg, transform=None, data_dir_mask=None):
+        super(FamiTestDataset, self).__init__()
+        print(data_dir_mask)
+        self.ms_image_filenames = [path.join(data_dir_ms, x) for x in listdir(data_dir_ms) if is_image_file(x)]
+        self.pan_image_filenames = [path.join(data_dir_pan, x) for x in listdir(data_dir_pan) if is_image_file(x)]
+        self.patch_size = cfg['data']['patch_size']
+        self.upscale_factor = cfg['data']['upscale']
+        self.transform = transform
+        self.data_augmentation = cfg['data']['data_augmentation']
+        self.normalize = cfg['data']['normalize']
+        self.cfg = cfg
+    
+    def __getitem__(self, index):
+        ms_image = load_img(self.ms_image_filenames[index])
+        pan_image = load_img(self.pan_image_filenames[index])
+        _, file = path.split(self.ms_image_filenames[index])
+        ms_image = ms_image.crop((0, 0, ms_image.size[0] // self.upscale_factor * self.upscale_factor, ms_image.size[1] // self.upscale_factor * self.upscale_factor))
+        lms_image = ms_image.resize((int(ms_image.size[0]/self.upscale_factor), int(ms_image.size[1]/self.upscale_factor)), Image.BICUBIC)
+        pan_image = pan_image.crop((0, 0, pan_image.size[0] // self.upscale_factor * self.upscale_factor, pan_image.size[1] // self.upscale_factor * self.upscale_factor))
+        bms_image = rescale_img(lms_image, self.upscale_factor)
+
+        if self.data_augmentation:
+            ms_image, lms_image, pan_image, bms_image, _ = augment(ms_image, lms_image, pan_image, bms_image)
+
+        if self.transform:
+            ms_image = self.transform(ms_image)
+            lms_image = self.transform(lms_image)
+            pan_image = self.transform(pan_image)
+            bms_image = self.transform(bms_image)
+
+        if self.normalize:
+            ms_image = ms_image * 2 - 1
+            lms_image = lms_image * 2 - 1
+            pan_image = pan_image * 2 - 1
+            bms_image = bms_image * 2 - 1
+
+        return ms_image, lms_image, pan_image, bms_image, file
+
+    def __len__(self):
+        return len(self.ms_image_filenames)

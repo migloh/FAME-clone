@@ -1,5 +1,43 @@
 data:
+  batch_size:
   upscale: 4
   patch_size: 32
   data_augmentation: False
   normalize: False
+  n_colors: 4
+
+nEpochs: 1000
+epoch:
+checkpoint: /
+threads:
+gpu_modes:
+source_ms:
+source_pan:
+test:
+  source_ms:
+  source_pan:
+
+data_dir_train:
+data_dir_eval:
+
+schedule:
+  optimizer:
+  loss:
+  lr:
+  beta1: ADAM
+  beta2:
+  epsilon:
+  momentum: SGD
+  alpha: RMSprop
+  gclip:
+  loss: L1 # MSE, CE
+  use_YCbCr:
+algorithm: moe
+log_dir: 
+pretrain:
+  pretrained:
+  pre_folder:
+  pre_sr:
+gpu_mode:
+seed:
+gpus:
