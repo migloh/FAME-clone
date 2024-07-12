@@ -1,43 +1,48 @@
+algorithm: moe
+nEpochs: 1000
+gpu_mode: True
+save_best: True
+gpus: [0]
+threads: 4 #num_works
+log_dir: ~
+
+seed:
+checkpoint: ~
+data_dir_train: ../dataset/train_ds
+data_dir_eval: ../dataset/eval_ds
+
+source_ms: ms
+source_pan: pan
+
+pretrain:
+  pretrained: False
+  pre_sr: ~
+  pre_folder: ~
+
+test:
+  type: test # eval
+  data_dir: WV2_data/test128
+  source_ms: ms
+  source_pan: pan
+  model: ~
+  save_dir: pan-test/result/
+
 data:
-  batch_size:
   upscale: 4
+  batch_size: 4
   patch_size: 32
   data_augmentation: False
-  normalize: False
   n_colors: 4
-
-nEpochs: 1000
-epoch:
-checkpoint: /
-threads:
-gpu_modes:
-source_ms:
-source_pan:
-test:
-  source_ms:
-  source_pan:
-
-data_dir_train:
-data_dir_eval:
+  normalize: False
 
 schedule:
-  optimizer:
-  loss:
-  lr:
-  beta1: ADAM
-  beta2:
-  epsilon:
-  momentum: SGD
-  alpha: RMSprop
-  gclip:
+  lr: 5e-4 #5e-6 1e-2
+  optimizer: ADAM #ADAM, SGD, RMSprop
+  beta1: 0.9 #ADAM beta1
+  beta2: 0.999 #ADAM beta
+  epsilon: 1e-8 #ADAM epsilon
+  momentum: 0.9 #SGD momentum
+  alpha: 0.9 #RMSprop alpha
+  gclip: 4 #0.4 0.04
   loss: L1 # MSE, CE
-  use_YCbCr:
-algorithm: moe
-log_dir: 
-pretrain:
-  pretrained:
-  pre_folder:
-  pre_sr:
-gpu_mode:
-seed:
-gpus:
+  use_YCbCr: False
