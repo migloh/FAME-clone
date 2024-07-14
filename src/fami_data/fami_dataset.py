@@ -3,6 +3,7 @@ from torch import cat
 import random
 from os import listdir, path
 from PIL import Image, ImageOps
+import numpy as np
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP', 'tif', 'TIF'])
@@ -10,6 +11,20 @@ def is_image_file(filename):
 def load_img(filepath):
     img = Image.open(filepath)
     return img
+
+def load_ms_img(pan_filename, pan_shape, n_colors):
+    print("PANSHAPE CAP CAP ", pan_shape)
+    ms_fn = pan_filename.split("\\")[-1]
+    ms_img_root = path.join(pan_filename.split("\\")[:-1], "ms")
+    final_ms = np.zeros((pan_shape.shape[1], pan_shape.shape[0], n_colors), dtype=np.uint8) 
+    for i in range(1, 1+n_colors):
+        ms_layer_name = ms_fn[:7]+str(i)+".TIF"
+        ms_layer_full = path.join(ms_img_root, ms_layer_name)
+        img = Image.open(ms_layer_full)
+        img_arr = np.array(img)
+        final_ms[:, :, i-1] = img_arr
+    img_obj = Image.fromarray(final_ms)
+    return img_obj
 
 def rescale_img(img_in, scale):
     size_in = img_in.size
@@ -86,8 +101,8 @@ class FamiTrainDataset(Dataset):
         self.cfg = cfg
 
     def __getitem__(self, index):
-        ms_image = load_img(self.ms_image_filenames[index])
         pan_image = load_img(self.pan_image_filenames[index])
+        ms_image = load_ms_img(self.pan_image_filenames[index], pan_image.size, self.cfg["data"]["n_colors"])
         if self.mask_image_filenames != None:
             mask_image = load_img(self.mask_image_filenames[index])
             mask_image = mask_image.crop((0, 0, mask_image.size[0] // self.upscale_factor * self.upscale_factor,
@@ -149,8 +164,8 @@ class FamiTestDataset(Dataset):
         self.cfg = cfg
     
     def __getitem__(self, index):
-        ms_image = load_img(self.ms_image_filenames[index])
         pan_image = load_img(self.pan_image_filenames[index])
+        ms_image = load_ms_img(self.pan_image_filenames[index], pan_image.size, self.cfg["data"]["n_colors"])
         _, file = path.split(self.ms_image_filenames[index])
         ms_image = ms_image.crop((0, 0, ms_image.size[0] // self.upscale_factor * self.upscale_factor, ms_image.size[1] // self.upscale_factor * self.upscale_factor))
         lms_image = ms_image.resize((int(ms_image.size[0]/self.upscale_factor), int(ms_image.size[1]/self.upscale_factor)), Image.BICUBIC)

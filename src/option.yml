@@ -8,8 +8,8 @@ log_dir: ~
 
 seed:
 checkpoint: ~
-data_dir_train: ../dataset/train_ds
-data_dir_eval: ../dataset/eval_ds
+data_dir_train: ../dataset/train
+data_dir_eval: ../dataset/eval
 
 source_ms: ms
 source_pan: pan
@@ -21,7 +21,7 @@ pretrain:
 
 test:
   type: test # eval
-  data_dir: WV2_data/test128
+  data_dir: ../dataset/test
   source_ms: ms
   source_pan: pan
   model: ~
