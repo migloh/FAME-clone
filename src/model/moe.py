@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from modules import InvertibleConv1x1
-from refine import Refine
+from model.modules import InvertibleConv1x1
+from model.refine import Refine
 import torch.nn.init as init
 
 class MaskPredictor(nn.Module):

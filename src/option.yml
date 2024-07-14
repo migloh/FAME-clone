@@ -4,10 +4,10 @@ gpu_mode: True
 save_best: True
 gpus: [0]
 threads: 4 #num_works
-log_dir: ~
+log_dir: log/
 
-seed:
-checkpoint: ~
+seed: 123
+checkpoint: ckpt/
 data_dir_train: ../dataset/train
 data_dir_eval: ../dataset/eval
 

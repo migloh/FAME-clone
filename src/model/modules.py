@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-import scipy
-import thops
+import scipy.linalg
+from model import thops
 
 class InvertibleConv1x1(nn.Module):
     def __init__(self, num_channels, LU_decomposed=False):

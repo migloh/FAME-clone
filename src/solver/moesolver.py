@@ -1,5 +1,5 @@
 import os, shutil, torch, math
-from basesolver import BaseSolver
+from solver.basesolver import BaseSolver
 from utils.utils import make_optimizer, make_loss, save_config, save_net_config, cpsnr, cssim, no_ref_evaluate
 import numpy as np
 import torch.backends.cudnn as cudnn
@@ -38,11 +38,11 @@ class Solver(BaseSolver):
         self.log_name = self.cfg['algorithm'] + '_' + str(self.cfg['data']['upscale']) + '_' + str(self.timestamp)
         # save log
         self.writer = SummaryWriter(self.cfg['log_dir']+str(self.log_name))
-        save_net_config(self.log_name, self.model)
-        save_yml(cfg, os.path.join(self.cfg['log_dif'] + str(self.log_name), 'config.yml'))
-        save_config(self.log_name, 'Train dataset has {} images and {} batches.'.format(len(self.train_dataset), len(self.train_loader)))
-        save_config(self.log_name, 'Val dataset has {} images and {} batches.'.format(len(self.val_dataset), len(self.val_loader)))
-        save_config(self.log_name, 'Model parameters: '+ str(sum(param.numel() for param in self.model.parameters())))
+        save_net_config(self.cfg['log_dir'], self.log_name, self.model)
+        save_yml(cfg, os.path.join(self.cfg['log_dir'] + str(self.log_name), 'config.yml'))
+        save_config(self.cfg['log_dir'], self.log_name, 'Train dataset has {} images and {} batches.'.format(len(self.train_dataset), len(self.train_loader)))
+        save_config(self.cfg['log_dir'], self.log_name, 'Val dataset has {} images and {} batches.'.format(len(self.val_dataset), len(self.val_loader)))
+        save_config(self.cfg['log_dir'], self.log_name, 'Model parameters: '+ str(sum(param.numel() for param in self.model.parameters())))
     
     def train(self):
         with tqdm(total=len(self.train_loader), miniters=1,

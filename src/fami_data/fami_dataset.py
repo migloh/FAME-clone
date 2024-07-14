@@ -13,10 +13,9 @@ def load_img(filepath):
     return img
 
 def load_ms_img(pan_filename, pan_shape, n_colors):
-    print("PANSHAPE CAP CAP ", pan_shape)
     ms_fn = pan_filename.split("\\")[-1]
-    ms_img_root = path.join(pan_filename.split("\\")[:-1], "ms")
-    final_ms = np.zeros((pan_shape.shape[1], pan_shape.shape[0], n_colors), dtype=np.uint8) 
+    ms_img_root = path.join(*pan_filename.split("\\")[:-2], "ms")
+    final_ms = np.zeros((pan_shape[1], pan_shape[0], n_colors), dtype=np.uint8) 
     for i in range(1, 1+n_colors):
         ms_layer_name = ms_fn[:7]+str(i)+".TIF"
         ms_layer_full = path.join(ms_img_root, ms_layer_name)
