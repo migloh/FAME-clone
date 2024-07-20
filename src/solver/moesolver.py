@@ -89,7 +89,7 @@ class Solver(BaseSolver):
             self.writer.add_image('image1', ms_image[0], self.epoch)
             self.writer.add_image('image2', y[0], self.epoch)
             self.writer.add_image('image3', pan_image[0], self.epoch)
-            save_config(self.log_name, 'Initial Training Epoch {}: Loss={:.4f}'.format(self.epoch, self.records['Loss'][-1]))
+            save_config(self.cfg['log_dir'], self.log_name, 'Initial Training Epoch {}: Loss={:.4f}'.format(self.epoch, self.records['Loss'][-1]))
             self.writer.add_scalar('Loss_epoch', self.records['Loss'][-1], self.epoch)
 
     def eval(self):
@@ -228,4 +228,4 @@ class Solver(BaseSolver):
                 self.epoch += 1
         except KeyboardInterrupt:
             self.save_checkpoint(epoch=self.epoch)
-        save_config(self.log_name, 'Training done.')
+        save_config(self.cfg['log_dir'], self.log_name, 'Training done.')

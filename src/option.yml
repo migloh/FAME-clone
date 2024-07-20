@@ -1,5 +1,5 @@
 algorithm: moe
-nEpochs: 1000
+nEpochs: 1
 gpu_mode: True
 save_best: True
 gpus: [0]
@@ -8,8 +8,8 @@ log_dir: log/
 
 seed: 123
 checkpoint: ckpt/
-data_dir_train: ../dataset/train
-data_dir_eval: ../dataset/eval
+data_dir_train: ../../multispectral_data/train 
+data_dir_eval: ../../multispectral_data/eval
 
 source_ms: ms
 source_pan: pan
@@ -21,7 +21,7 @@ pretrain:
 
 test:
   type: test # eval
-  data_dir: ../dataset/test
+  data_dir: ../../multispectral_data/test
   source_ms: ms
   source_pan: pan
   model: ~
@@ -29,7 +29,7 @@ test:
 
 data:
   upscale: 4
-  batch_size: 4
+  batch_size: 32
   patch_size: 32
   data_augmentation: False
   n_colors: 4

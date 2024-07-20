@@ -13,17 +13,24 @@ def load_img(filepath):
     return img
 
 def load_ms_img(pan_filename, pan_shape, n_colors):
-    ms_fn = pan_filename.split("\\")[-1]
-    ms_img_root = path.join(*pan_filename.split("\\")[:-2], "ms")
+    ms_fn = pan_filename.split("/")[-1]
+    ms_img_root = path.join(*pan_filename.split("/")[:-2], "ms")
     final_ms = np.zeros((pan_shape[1], pan_shape[0], n_colors), dtype=np.uint8) 
     for i in range(1, 1+n_colors):
-        ms_layer_name = ms_fn[:7]+str(i)+".TIF"
+        ms_layer_name = ms_fn[:-5]+str(i)+".TIF"
         ms_layer_full = path.join(ms_img_root, ms_layer_name)
         img = Image.open(ms_layer_full)
         img_arr = np.array(img)
         final_ms[:, :, i-1] = img_arr
     img_obj = Image.fromarray(final_ms)
     return img_obj
+
+def load_mask_img(pan_filename):
+    mask_fn = pan_filename.split("/")[-1]
+    mask_img_root = path.join(*pan_filename.split("/")[:-2], "mask")
+    mask_dir = path.join(mask_img_root, mask_fn)
+    mask = Image.open(mask_dir)
+    return mask
 
 def rescale_img(img_in, scale):
     size_in = img_in.size
@@ -103,7 +110,7 @@ class FamiTrainDataset(Dataset):
         pan_image = load_img(self.pan_image_filenames[index])
         ms_image = load_ms_img(self.pan_image_filenames[index], pan_image.size, self.cfg["data"]["n_colors"])
         if self.mask_image_filenames != None:
-            mask_image = load_img(self.mask_image_filenames[index])
+            mask_image = load_mask_img(self.pan_image_filenames[index])
             mask_image = mask_image.crop((0, 0, mask_image.size[0] // self.upscale_factor * self.upscale_factor,
                                           mask_image.size[1] // self.upscale_factor * self.upscale_factor))
             mask_image = mask_image.convert('L')

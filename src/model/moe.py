@@ -141,6 +141,7 @@ class HfInstance(nn.Module):
 class LfExpert(nn.Module):
     def __init__(self,channels,num_experts,k):
         super(LfExpert, self).__init__()
+        self.num_experts = num_experts
         self.gate = GateNetwork(channels,num_experts,k)
         self.pre_fuse = nn.Sequential(InvBlock(HinResBlock, 2*channels, channels),
                                          nn.Conv2d(2*channels,channels,1,1,0))
@@ -159,11 +160,12 @@ class LfExpert(nn.Module):
             expert_out = expert_layer(x[mask])
             cof_k = cof[mask,idx].view(-1,1,1,1)
             out[mask]+=expert_out*cof_k
-        return out,cof_k
+        return out, cof
 
 class HfExpert(nn.Module):
     def __init__(self,channels,num_experts,k):
         super(HfExpert, self).__init__()
+        self.num_experts = num_experts
         self.gate = GateNetwork(channels,num_experts,k)
         self.expert_networks_d = nn.ModuleList(
             [HfInstance(channels) for i in range(num_experts)])
@@ -181,11 +183,12 @@ class HfExpert(nn.Module):
             expert_out = expert_layer(x[mask])
             cof_k = cof[mask,idx].view(-1,1,1,1)
             out[mask]+=expert_out*cof_k
-        return out,cof_k
+        return out, cof
 
 class Decoder(nn.Module):
     def __init__(self,channels,num_experts,k):
         super(Decoder, self).__init__()
+        self.num_experts = num_experts
         self.gate = GateNetwork(channels, num_experts, k)
         self.expert_networks_d = nn.ModuleList(
             [ConvProce(channels) for i in range(num_experts)])
@@ -204,7 +207,7 @@ class Decoder(nn.Module):
             expert_out = expert_layer(x[mask])
             cof_k = cof[mask,idx].view(-1,1,1,1)
             out[mask]+=expert_out*cof_k
-        return out,cof_k
+        return out, cof
 
 def upsample(x, h, w):
     return F.interpolate(x, size=[h, w], mode='bicubic', align_corners=True)
@@ -273,4 +276,4 @@ class Net(nn.Module):
         lf,hf,lf_gate,hf_gate  = self.moeInstance(panf,msf,high_fre_mask,low_fre_mask)
         dec,dec_gate = self.decoder(torch.cat([msf,hf,panf,lf],dim=1))
         HR = self.refine(dec)+mHR
-        return HR,mask,[lf_gate,hf_gate,dec_gate]
+        return HR, mask, lf_gate, hf_gate, dec_gate
