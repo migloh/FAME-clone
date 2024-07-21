@@ -154,7 +154,7 @@ class FamiTrainDataset(Dataset):
         return ms_image, lms_image, pan_image, bms_image, file
 
     def __len__(self):
-        return len(self.ms_image_filenames) 
+        return len(self.pan_image_filenames) 
 
 class FamiTestDataset(Dataset):
     def __init__(self, data_dir_ms, data_dir_pan, cfg, transform=None, data_dir_mask=None):
@@ -196,4 +196,4 @@ class FamiTestDataset(Dataset):
         return ms_image, lms_image, pan_image, bms_image, file
 
     def __len__(self):
-        return len(self.ms_image_filenames)
+        return len(self.pan_image_filenames)
