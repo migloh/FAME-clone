@@ -5,7 +5,6 @@ import numpy as np
 import torch.backends.cudnn as cudnn
 from tqdm import tqdm
 from model.moe import Net
-from torch.autograd import Variable
 from torch import nn
 from tensorboardX import SummaryWriter
 from utils.config import save_yml
