@@ -46,18 +46,16 @@ class Solver(BaseSolver):
     
     def train(self):
         with tqdm(total=len(self.train_loader), miniters=1,
-                desc='Initial Training Epoch: [{}/{}]'.format(self.epoch, self.nEpochs)) as t:
+                desc='Training Epoch: [{}/{}]'.format(self.epoch, self.nEpochs)) as t:
             idx = math.pow(0.99, self.epoch - 1)
             para = 1* (idx)
             gate_cof = 1
             epoch_loss = 0
             for iteration, batch in enumerate(self.train_loader, 1):
-                ms_image, lms_image, pan_image, mask_gt, file = Variable(batch[0]), Variable(batch[1]), Variable(
-                    batch[2]), Variable(batch[3]), (batch[4])
+                ms_image, lms_image, pan_image, mask_gt, file = batch
 
                 if self.cuda:
-                    ms_image, lms_image, pan_image, mask_gt = ms_image.cuda(self.gpu_ids[0]), lms_image.cuda(
-                        self.gpu_ids[0]), pan_image.cuda(self.gpu_ids[0]), mask_gt.cuda(self.gpu_ids[0])
+                    ms_image, lms_image, pan_image, mask_gt = ms_image.to(self.device), lms_image.to(self.device), pan_image.to(self.device), mask_gt.to(self.device)
                 self.optimizer.zero_grad()
                 self.model.train()
                 y,mask,lf_gate,hf_gate,dec_gate = self.model(lms_image, lms_image, pan_image)
@@ -83,7 +81,6 @@ class Solver(BaseSolver):
                         self.cfg['schedule']['gclip']
                     )
                 self.optimizer.step()
-            torch.cuda.empty_cache() 
             self.scheduler.step()
             self.records['Loss'].append(epoch_loss / len(self.train_loader))
             self.writer.add_image('image1', ms_image[0], self.epoch)
@@ -91,16 +88,18 @@ class Solver(BaseSolver):
             self.writer.add_image('image3', pan_image[0], self.epoch)
             save_config(self.cfg['log_dir'], self.log_name, 'Initial Training Epoch {}: Loss={:.4f}'.format(self.epoch, self.records['Loss'][-1]))
             self.writer.add_scalar('Loss_epoch', self.records['Loss'][-1], self.epoch)
+            torch.cuda.empty_cache() 
 
     def eval(self):
-        with tqdm(total=len(self.test_loader), miniters=1,
+        with tqdm(total=len(self.val_loader), miniters=1,
                 desc='Val Epoch: [{}/{}]'.format(self.epoch, self.nEpochs)) as t1:
             psnr_list, ssim_list,qnr_list,d_lambda_list,d_s_list = [], [],[],[],[]
 
-            for iteration, batch in enumerate(self.test_loader, 1):
-                ms_image, lms_image, pan_image, bms_image, file = Variable(batch[0]), Variable(batch[1]), Variable(batch[2]), Variable(batch[3]), (batch[4])
+            # torch.cuda.empty_cache() 
+            for iteration, batch in enumerate(self.val_loader, 1):
+                ms_image, lms_image, pan_image, bms_image, file = batch
                 if self.cuda:
-                    ms_image, lms_image, pan_image, bms_image = ms_image.cuda(self.gpu_ids[0]), lms_image.cuda(self.gpu_ids[0]), pan_image.cuda(self.gpu_ids[0]), bms_image.cuda(self.gpu_ids[0])
+                    ms_image, lms_image, pan_image, bms_image = ms_image.to(self.device), lms_image.to(self.device), pan_image.to(self.device), bms_image.to(self.device)
 
                 self.model.eval()
                 with torch.no_grad():
@@ -151,7 +150,7 @@ class Solver(BaseSolver):
             self.records['QNR'].append(np.array(qnr_list).mean())
             self.records['D_lamda'].append(np.array(d_lambda_list).mean())
             self.records['D_s'].append(np.array(d_s_list).mean())
-            save_config(self.log_name, 'Val Epoch {}: PSNR={:.4f}, SSIM={:.6f},QNR={:.4f}, DS:{:.4f},D_L:{:.4F}'.format(self.epoch, self.records['PSNR'][-1],
+            save_config(self.cfg['log_dir'], self.log_name, 'Val Epoch {}: PSNR={:.4f}, SSIM={:.6f},QNR={:.4f}, DS:{:.4f},D_L:{:.4F}'.format(self.epoch, self.records['PSNR'][-1],
                                                                     self.records['SSIM'][-1],self.records['QNR'][-1],self.records['D_s'][-1],self.records['D_lamda'][-1]))
             self.writer.add_scalar('PSNR_epoch', self.records['PSNR'][-1], self.epoch)
             self.writer.add_scalar('SSIM_epoch', self.records['SSIM'][-1], self.epoch)
@@ -168,17 +167,9 @@ class Solver(BaseSolver):
             torch.cuda.manual_seed(self.cfg['seed'])
             cudnn.benchmark = True
               
-            gups_list = self.cfg['gpus']
-            self.gpu_ids = []
-            for str_id in gups_list:
-                gid = int(str_id)
-                if gid >=0:
-                    self.gpu_ids.append(gid)
-
-            torch.cuda.set_device(self.gpu_ids[0]) 
-            self.loss = self.loss.cuda(self.gpu_ids[0])
-            self.model = self.model.cuda(self.gpu_ids[0])
-            self.model = torch.nn.DataParallel(self.model, device_ids=self.gpu_ids) 
+            self.device = torch.device("cuda")
+            self.loss = self.loss.to(self.device)
+            self.model = self.model.to(self.device)
 
     def check_pretrained(self):
         checkpoint = os.path.join(self.cfg['pretrain']['pre_folder'], self.cfg['pretrain']['pre_sr'])

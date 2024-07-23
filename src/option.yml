@@ -1,5 +1,5 @@
 algorithm: moe
-nEpochs: 1
+nEpochs: 1000
 gpu_mode: True
 save_best: True
 gpus: [0]
@@ -8,7 +8,7 @@ log_dir: log/
 
 seed: 123
 checkpoint: ckpt/
-data_dir_train: ../../multispectral_data/train 
+data_dir_train: ../../multispectral_data/train
 data_dir_eval: ../../multispectral_data/eval
 
 source_ms: ms
