@@ -23,7 +23,6 @@ class Solver(BaseSolver):
         super(Solver, self).__init__(cfg)
         self.init_epoch = self.cfg['schedule']
 
-        assert (self.cfg['data']['n_colors']==4)
         self.model = Net(
             num_channels = self.cfg['data']['n_colors'],
             base_filter=32,

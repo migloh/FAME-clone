@@ -4,42 +4,26 @@ import random
 from os import listdir, path
 from PIL import Image, ImageOps
 import numpy as np
+from tifffile import imread
+import cv2
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP', 'tif', 'TIF'])
 
 def load_img(filepath):
-    img = Image.open(filepath)
+    img = imread(filepath)
     return img
 
-def load_ms_img(pan_filename, pan_shape, n_colors):
-    ms_fn = pan_filename.split("/")[-1]
-    ms_img_root = path.join(*pan_filename.split("/")[:-2], "ms")
-    final_ms = np.zeros((pan_shape[1], pan_shape[0], n_colors), dtype=np.uint8) 
-    for i in range(1, 1+n_colors):
-        ms_layer_name = ms_fn[:-5]+str(i)+".TIF"
-        ms_layer_full = path.join(ms_img_root, ms_layer_name)
-        img = Image.open(ms_layer_full)
-        img_arr = np.array(img)
-        final_ms[:, :, i-1] = img_arr
-    img_obj = Image.fromarray(final_ms)
-    return img_obj
-
-def load_mask_img(pan_filename):
-    mask_fn = pan_filename.split("/")[-1]
-    mask_img_root = path.join(*pan_filename.split("/")[:-2], "mask")
-    mask_dir = path.join(mask_img_root, mask_fn)
-    mask = Image.open(mask_dir)
-    return mask
-
 def rescale_img(img_in, scale):
-    size_in = img_in.size
-    new_size_in = tuple([int(x * scale) for x in size_in])
-    img_in = img_in.resize(new_size_in, resample=Image.BICUBIC)
+    # size_in = img_in.shape
+    new_h = int(img_in.shape[0]*scale)
+    new_w = int(img_in.shape[1]*scale)
+    # new_size_in = tuple([int(x * scale) for x in size_in])
+    img_in = cv2.resize(img_in, dsize=(new_h, new_w), interpolation=cv2.INTER_CUBIC)
     return img_in
 
 def get_patch(ms_image, lms_image, pan_image, bms_image, patch_size, scale, ix=-1, iy=-1):
-    (ih, iw) = lms_image.size
+    (ih, iw, ic) = lms_image.shape
     (th, tw) = (scale * ih, scale * iw)
 
     patch_mult = scale #if len(scale) > 1 else 1
@@ -53,10 +37,10 @@ def get_patch(ms_image, lms_image, pan_image, bms_image, patch_size, scale, ix=-
 
     (tx, ty) = (scale * ix, scale * iy)
 
-    lms_image = lms_image.crop((iy,ix,iy + ip, ix + ip))
-    ms_image = ms_image.crop((ty,tx,ty + tp, tx + tp))
-    pan_image = pan_image.crop((ty,tx,ty + tp, tx + tp))
-    bms_image = bms_image.crop((ty,tx,ty + tp, tx + tp))
+    lms_image = lms_image[iy:iy+ip, ix:ix+ip]
+    ms_image = ms_image[ty:ty+tp, tx:tx+tp]
+    pan_image = pan_image[ty:ty+tp, tx:tx+tp]
+    bms_image = bms_image[ty:ty+tp, tx:tx+tp]
                 
     info_patch = {
         'ix': ix, 'iy': iy, 'ip': ip, 'tx': tx, 'ty': ty, 'tp': tp}
@@ -107,22 +91,22 @@ class FamiTrainDataset(Dataset):
         self.cfg = cfg
 
     def __getitem__(self, index):
+        ms_image = load_img(self.ms_image_filenames[index])
         pan_image = load_img(self.pan_image_filenames[index])
-        ms_image = load_ms_img(self.pan_image_filenames[index], pan_image.size, self.cfg["data"]["n_colors"])
         if self.mask_image_filenames != None:
-            mask_image = load_mask_img(self.pan_image_filenames[index])
-            mask_image = mask_image.crop((0, 0, mask_image.size[0] // self.upscale_factor * self.upscale_factor,
-                                          mask_image.size[1] // self.upscale_factor * self.upscale_factor))
-            mask_image = mask_image.convert('L')
+            mask_image = load_img(self.mask_image_filenames[index])
+            mask_image = mask_image[0:mask_image.shape[0] // self.upscale_factor * self.upscale_factor, 
+                                    0:mask_image.shape[1] // self.upscale_factor * self.upscale_factor]
+            # mask_image = cv2.cvtColor(mask_image, cv2.COLOR_BGR2GRAY)
 
         _, file = path.split(self.ms_image_filenames[index])
 
-        ms_image = ms_image.crop((0, 0, ms_image.size[0] // self.upscale_factor * self.upscale_factor,
-                                  ms_image.size[1] // self.upscale_factor * self.upscale_factor))
-        lms_image = ms_image.resize(
-            (int(ms_image.size[0] / self.upscale_factor), int(ms_image.size[1] / self.upscale_factor)), Image.BICUBIC)
-        pan_image = pan_image.crop((0, 0, pan_image.size[0] // self.upscale_factor * self.upscale_factor,
-                                    pan_image.size[1] // self.upscale_factor * self.upscale_factor))
+        ms_image = ms_image[0:ms_image.shape[0] // self.upscale_factor * self.upscale_factor, 
+                                0:ms_image.shape[1] // self.upscale_factor * self.upscale_factor]
+        lms_image = cv2.resize(ms_image, dsize=(int(ms_image.shape[0] / self.upscale_factor), 
+                                                int(ms_image.shape[1] / self.upscale_factor)), interpolation=cv2.INTER_CUBIC)
+        pan_image = pan_image[0:pan_image.shape[0] // self.upscale_factor * self.upscale_factor, 
+                                0:pan_image.shape[1] // self.upscale_factor * self.upscale_factor]
         bms_image = rescale_img(lms_image, self.upscale_factor)
         if self.mask_image_filenames:
             ms_image, lms_image, pan_image, bms_image, _ = get_patch(ms_image, lms_image, pan_image, mask_image,
@@ -170,12 +154,15 @@ class FamiTestDataset(Dataset):
         self.cfg = cfg
     
     def __getitem__(self, index):
+        ms_image = load_img(self.ms_image_filenames[index])
         pan_image = load_img(self.pan_image_filenames[index])
-        ms_image = load_ms_img(self.pan_image_filenames[index], pan_image.size, self.cfg["data"]["n_colors"])
         _, file = path.split(self.ms_image_filenames[index])
-        ms_image = ms_image.crop((0, 0, ms_image.size[0] // self.upscale_factor * self.upscale_factor, ms_image.size[1] // self.upscale_factor * self.upscale_factor))
-        lms_image = ms_image.resize((int(ms_image.size[0]/self.upscale_factor), int(ms_image.size[1]/self.upscale_factor)), Image.BICUBIC)
-        pan_image = pan_image.crop((0, 0, pan_image.size[0] // self.upscale_factor * self.upscale_factor, pan_image.size[1] // self.upscale_factor * self.upscale_factor))
+        ms_image = ms_image[0:ms_image.shape[0] // self.upscale_factor * self.upscale_factor, 
+                                0:ms_image.shape[1] // self.upscale_factor * self.upscale_factor]
+        lms_image = cv2.resize(ms_image, dsize=(int(ms_image.shape[0] / self.upscale_factor), 
+                                                int(ms_image.shape[1] / self.upscale_factor)), interpolation=cv2.INTER_CUBIC)
+        pan_image = pan_image[0:pan_image.shape[0] // self.upscale_factor * self.upscale_factor, 
+                                0:pan_image.shape[1] // self.upscale_factor * self.upscale_factor]
         bms_image = rescale_img(lms_image, self.upscale_factor)
 
         if self.data_augmentation:

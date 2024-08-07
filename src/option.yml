@@ -8,8 +8,8 @@ log_dir: log/
 
 seed: 123
 checkpoint: ckpt/
-data_dir_train: ../../multispectral_data/train
-data_dir_eval: ../../multispectral_data/eval
+data_dir_train: /storage/student12/dataset/train
+data_dir_eval: /storage/student12/dataset/eval
 
 source_ms: ms
 source_pan: pan
@@ -21,7 +21,7 @@ pretrain:
 
 test:
   type: test # eval
-  data_dir: ../../multispectral_data/test
+  data_dir: ../../multispectral_data/
   source_ms: ms
   source_pan: pan
   model: ~
@@ -32,7 +32,7 @@ data:
   batch_size: 32
   patch_size: 32
   data_augmentation: False
-  n_colors: 4
+  n_colors: 5
   normalize: False
 
 schedule:

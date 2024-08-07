@@ -244,7 +244,7 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.nc = base_filter
         channels = base_filter
-        self.msconv = nn.Conv2d(4, base_filter, 3, 1, 1)
+        self.msconv = nn.Conv2d(num_channels, base_filter, 3, 1, 1)
         self.pconv = nn.Conv2d(1,base_filter,3,1,1)
         self.msencoder = FeatureEncoder(base_filter)
         self.panencoder = FeatureEncoder(base_filter)
@@ -253,7 +253,7 @@ class Net(nn.Module):
 
         self.moeInstance = MOEInstance(channels,4,2)
         self.decoder = Decoder(channels,4,2)
-        self.refine = Refine(base_filter,4)
+        self.refine = Refine(base_filter, num_channels)
 
     def forward(self, ms, _, pan):
         # ms  - low-resolution multi-spectral image [N,C,h,w]
