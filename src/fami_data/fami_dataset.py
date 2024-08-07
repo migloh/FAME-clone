@@ -2,7 +2,7 @@ from torch.utils.data import Dataset
 from torch import cat
 import random
 from os import listdir, path
-from PIL import Image, ImageOps
+from PIL import ImageOps
 import numpy as np
 from tifffile import imread
 import cv2
@@ -12,13 +12,13 @@ def is_image_file(filename):
 
 def load_img(filepath):
     img = imread(filepath)
+    if(img.dtype==np.uint16):
+        img = (img/256).astype(np.uint8)
     return img
 
 def rescale_img(img_in, scale):
-    # size_in = img_in.shape
     new_h = int(img_in.shape[0]*scale)
     new_w = int(img_in.shape[1]*scale)
-    # new_size_in = tuple([int(x * scale) for x in size_in])
     img_in = cv2.resize(img_in, dsize=(new_h, new_w), interpolation=cv2.INTER_CUBIC)
     return img_in
 
