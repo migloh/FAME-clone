@@ -8,8 +8,8 @@ log_dir: log/
 
 seed: 123
 checkpoint: ckpt/
-data_dir_train: ../../multispectral_data/train
-data_dir_eval: ../../multispectral_data/eval
+data_dir_train: ../../../../../storage/student12/multispectral_data/eval
+data_dir_eval: ../../../../../storage/student12/multispectral_data/eval
 
 source_ms: ms
 source_pan: pan
