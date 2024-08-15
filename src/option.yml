@@ -7,7 +7,7 @@ threads: 4 #num_works
 log_dir: log/
 
 seed: 123
-checkpoint: ckpt/
+checkpoint: /home/student12/milos/FAME-clone/src/ckpt/moe_4_1723054910/bestD_s.pth
 data_dir_train: /storage/student12/dataset/train
 data_dir_eval: /storage/student12/dataset/eval
 
@@ -20,12 +20,13 @@ pretrain:
   pre_folder: ~
 
 test:
-  type: test # eval
-  data_dir: ../../multispectral_data/
+  type: testds # eval
+  data_dir: /storage/student12/dataset/test
+  batch_size: 64 
   source_ms: ms
   source_pan: pan
-  model: ~
-  save_dir: pan-test/result/
+  model: net
+  save_dir: /storage/student12/dataset/testresult
 
 data:
   upscale: 4
